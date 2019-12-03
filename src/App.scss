@@ -1,0 +1,132 @@
+$bg-main: #921029;
+$border-main: #921029;
+$input-bg: #433437;
+$input-bg-hov: #251d1f;
+$input-bd: #ff0032;
+$input-text: #fff;
+$btn-bg: #fff;
+$btn-bg-hov: #e0e0e0;
+$btn-text: #292929;
+$btn-clear-text: #606060;
+$btn-action-bg: #f2274f;
+$btn-action-bg-hov: #d12144;
+$btn-action-text: #fff;
+
+html,
+body,
+#root {
+  width: 100%;
+  height: 100%;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+.w-inner {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-content: center;
+}
+
+.btn {
+  display: block;
+  height: 70px;
+  background: #fff;
+  border: none;
+  outline: none;
+  padding: 10px;
+  margin: 0;
+  font-size: 40px;
+  line-height: 100%;
+  text-align: center;
+  cursor: pointer;
+  transition: all .2s;
+
+  &:hover,
+  &:active,
+  &:focus {
+    background: $btn-bg-hov;
+  }
+
+  &--clear {
+    font-size: 26px;
+    color: $btn-clear-text;
+    grid-column-start: 1;
+    grid-column-end: 4;
+    text-transform: uppercase;
+  }
+
+  &--del {
+    font-size: 26px;
+    text-transform: uppercase;
+  }
+
+  &--action {
+    background: $btn-action-bg;
+    color: $btn-action-text;
+    grid-column-end: 5;
+    font-size: 46px;
+
+    &:hover,
+    &:active,
+    &:focus {
+      background: $btn-action-bg-hov;
+    }
+  }
+
+  &--sm {
+    font-size: 30px;
+  }
+}
+
+.c-calc {
+  width: 285px;
+  border: 1px solid $border-main;
+  background: $bg-main;
+  align-self: center;
+
+  &__input-box {
+    border-bottom: 1px solid $input-bd;
+  }
+
+  &__input {
+    display: block;
+    width: 100%;
+    height: 93px;
+    background: $input-bg;
+    border: none;
+    font-size: 50px;
+    font-weight: bold;
+    padding: 0 10px;
+    color: $input-text;
+    text-align: right;
+
+    &:hover,
+    &:active,
+    &:focus {
+      background: $input-bg-hov;
+    }
+  }
+
+  &__action-box {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    grid-gap: 1px;
+    grid-auto-flow: dense;
+  }
+
+  &__num-box {
+    grid-column-start: 1;
+    grid-column-end: 4;
+    grid-row-start: 2;
+    grid-row-end: 6;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    grid-gap: 1px;
+    grid-auto-flow: dense;
+    direction: rtl;
+  }
+}
