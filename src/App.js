@@ -13,94 +13,281 @@ class App extends Component {
   }
 
   handleNumClick = (event, value) => {
-    console.log(value);
+    event && event.preventDefault();
+
     let valueStr = String(value);
-    if (value === 'ADD') {
-      valueStr = '+'
-    } else if (value === 'SUBSTRACT') {
-      valueStr = '-'
-    } else if (value === 'DIVIDE') {
-      valueStr = '/'
-    } else if (value === 'MULTIPLY') {
-      valueStr = '*'
-    } else if (this.state.inputValue === '0') {
-      this.setState({
-        inputValue: valueStr
-      })
+    const inputBlock = document.getElementById('js-input');
+
+    if (!this.state.currentAction) { // action not set
+      if (!this.state.firstDigit) {         // firstDigit empty
+        this.setState({
+          firstDigit: valueStr,
+          inputValue: valueStr
+        })
+      } else {                              // firstDigit not empty
+        this.setState({
+          firstDigit: this.state.firstDigit + valueStr,
+          inputValue: this.state.inputValue + valueStr
+        })
+      }
+    } else {                                // action is set
+      if (!this.state.firstDigit) {         // firstDigit empty
+        if (this.state.currentAction === 'ADD' || this.state.currentAction === 'MULTIPLY' || this.state.currentAction === 'DIVIDE') {
+          if (!this.state.secondDigit) {    // secondDigit empty
+            this.setState({
+              secondDigit: valueStr,
+              inputValue: valueStr
+            })
+          } else {                          // secondDigit not empty
+            this.setState({
+              secondDigit: this.state.secondDigit + valueStr,
+              inputValue: this.state.secondDigit + valueStr
+            })
+          }
+        } else if (this.state.currentAction === 'SUBSTRACT') {
+          if (!this.state.secondDigit) {    // secondDigit empty
+            this.setState({
+              secondDigit: valueStr,
+              inputValue: '-' + valueStr
+            })
+          } else {                          // secondDigit not empty
+            this.setState({
+              secondDigit: this.state.secondDigit + valueStr,
+              inputValue: this.state.inputValue + valueStr
+            })
+          }
+        }
+      } else {                              // firstDigit not empty
+        if (!this.state.secondDigit) {      // secondDigit empty
+          this.setState({
+            secondDigit: valueStr,
+            inputValue: this.state.inputValue + valueStr
+          })
+        } else {                            // secondDigit not empty
+          this.setState({
+            secondDigit: this.state.secondDigit + valueStr,
+            inputValue: this.state.inputValue + valueStr
+          })
+        }
+      }
+    }
+
+    this.scrollInputRight(inputBlock);
+  }
+
+  handleCommaClick = (event) => {
+    event && event.preventDefault();
+    let { inputValue, firstDigit, secondDigit, currentAction } = this.state;
+
+    if (currentAction) {
+      if (secondDigit) {
+        if (!secondDigit.toString().includes('.')) {
+          this.setState({
+            secondDigit: secondDigit + ',',
+            inputValue: inputValue + ','
+          })
+        }
+      } else {
+        this.setState({
+          secondDigit: '0.',
+          inputValue: inputValue + '0,'
+        })
+      }
     } else {
-      this.setState({
-        inputValue: this.state.inputValue + valueStr
-      })
+      if (firstDigit) {
+        if (!firstDigit.toString().includes('.')) {
+          this.setState({
+            firstDigit: firstDigit + ',',
+            inputValue: inputValue + ','
+          })
+        }
+      } else {
+        this.setState({
+          firstDigit: '0.',
+          inputValue: '0,'
+        })
+      }
     }
   }
 
   handleMathAction = (event, type) => {
-    switch (type) {
-      case 'ADD':
-      case 'SUBSTRACT':
-      case 'DIVIDE':
-      case 'MULTIPLY':
-
+    event && event.preventDefault();
+    let actionSymbol;
+    const inputBlock = document.getElementById('js-input');
+    
+    if (type === 'ADD') {
+      actionSymbol = '+';
+    } else if (type === 'SUBSTRACT') {
+      actionSymbol = '-';
+    } else if (type === 'DIVIDE') {
+      actionSymbol = '/';
+    } else if (type === 'MULTIPLY') {
+      actionSymbol = '*';
     }
 
+    if (this.state.currentAction) {       // if action is already set - launch calculate method 
+      this.calculate().then(() => {
+        this.setState({
+          currentAction: type,
+          inputValue: this.state.inputValue + actionSymbol
+        });
+      });
+    } else {
+      this.setState({ 
+        currentAction: type
+      });
+      if (this.state.inputValue && this.state.inputValue !== '0') {     // change input only if not 0
+        this.setState({ 
+          inputValue: this.state.inputValue + actionSymbol
+        });
+      } 
+    }
+
+    this.scrollInputRight(inputBlock);
   }
 
   handleDelete = () => {
+    let { firstDigit, secondDigit, currentAction, inputValue } = this.state;
+    if (secondDigit) {
+      if (secondDigit.length < 2) {
+        this.setState({
+          secondDigit: null,
+        })
+      } else {
+        this.setState({
+          secondDigit: secondDigit.toString().substring(0, secondDigit.length - 1)
+        })
+      }      
+    } else if (currentAction) {
+      this.setState({
+        currentAction: null
+      });
+    } else if (firstDigit) {
+      this.setState({
+        firstDigit: firstDigit.toString().substring(0, firstDigit.length - 1)
+      })
+    }
 
+    if (inputValue.length < 2) {
+      this.setState({
+        inputValue: '0'
+      })
+    } else {
+      this.setState({
+        inputValue: inputValue.toString().substring(0, inputValue.length - 1)
+      })
+    }
   }
 
-  handleCalculate = () => {
+  handleCalculate = (event) => {
+    event && event.preventDefault();
+    this.calculate();
 
+    const inputBlock = document.getElementById('js-input');
+    this.scrollInputRight(inputBlock);
+  }
+
+  async calculate() {
+    let result,
+    output,
+    { firstDigit, secondDigit } = this.state;
+    firstDigit = firstDigit && parseFloat(firstDigit.toString().replace(',', '.'));
+
+    if (!secondDigit) {
+      this.setState({
+        inputValue: firstDigit,
+        firstDigit: firstDigit,
+        secondDigit: null,
+        currentAction: null
+      });
+      result = firstDigit;
+    } else {
+      secondDigit = parseFloat(secondDigit.toString().replace(',', '.'));
+
+      if (this.state.currentAction === 'ADD') {
+        result = firstDigit + secondDigit;
+      } else if (this.state.currentAction === 'MULTIPLY') {
+        result = firstDigit * secondDigit;
+      } else if (this.state.currentAction === 'DIVIDE') {
+        result = firstDigit / secondDigit;
+      } else if (this.state.currentAction === 'SUBSTRACT') {
+        result = firstDigit - secondDigit;
+      }
+    }
+
+    output = result;
+    if (output.toString().indexOf('.') > -1 && output.toString().split(".")[1].length > 5) {
+      output = result.toFixed(5).toString().replace('.', ',') + '...';
+    } else {
+      output = result.toString().replace('.', ',')
+    }
+
+    this.setState({
+      inputValue: output,
+      firstDigit: result,
+      secondDigit: null,
+      currentAction: null
+    });
   }
 
   handleKeyDown = (event) => {
-    const keyPressed = String.fromCharCode(event.keyCode);
-    console.log(keyPressed);
-    if (47 < event.keyCode && event.keyCode < 58) { // digits
-      console.log('digits');
-      this.setState({
-        inputValue: this.state.inputValue + keyPressed
-      })
-    } else if (event.keyCode === 187) { // add
-      console.log('add');
-    } else if (event.keyCode === 109) { // substract
-      console.log('substract');
+    if ( 47 < event.keyCode && event.keyCode < 58 ) { // digits
+      this.handleNumClick(event, String.fromCharCode(event.keyCode));
+    } else if (96 < event.keyCode && event.keyCode < 106) {
+      this.handleNumClick(event, String.fromCharCode(event.keyCode - 48));
+    } else if (event.keyCode === 107) { // add
+      this.handleMathAction(event, 'ADD');
+    } else if (event.keyCode === 109 || event.keyCode === 173) { // substract
+      this.handleMathAction(event, 'SUBSTRACT');
     } else if (event.keyCode === 106) { // multiply
-      console.log('multiply');
-    } else if (event.keyCode === 111) { // divide
-      console.log('divide');
+      this.handleMathAction(event, 'MULTIPLY');
+    } else if (event.keyCode === 111 || event.keyCode === 191) { // divide
+      this.handleMathAction(event, 'DIVIDE');
     } else if (event.keyCode === 8) { // backspace
-      console.log('backspace');
+      event.preventDefault();
+      this.handleDelete();
     } else if (event.keyCode === 13) { // enter
-      console.log('enter');
+      event.preventDefault();
+      this.handleCalculate();
+    } else if (event.keyCode === 188 || event.keyCode === 110) { // comma
+      this.handleCommaClick();
     }
   }
 
   handleInputFocus = (event) => { // to move cursor to the end of input
-    const val = event.target.value;
-    event.target.value = '';
-    event.target.value = val;
+    this.scrollInputRight(event.target);
+  }
+
+  scrollInputRight = (target) => {
+    target.setSelectionRange(target.value.length, target.value.length);
   }
 
   handleInputChange = () => {
-
+    
   }
 
   handleClear = () => {
     this.setState({
-      inputValue: '0'
-    })
+      inputValue: '0',
+      firstDigit: null,
+      secondDigit: null,
+      currentAction: null
+    });
+  }
+
+  componentDidMount() {
+    document.getElementById('js-input').focus();
   }
 
   render() { 
     const { inputValue } = this.state;
-
+    
     return ( 
       <React.Fragment>
         <form className="w-inner" onKeyDown={this.handleKeyDown} tabIndex="0">
           <div className="c-calc">
             <div className="c-calc__input-box">
-              <input type="text" placeholder="0" className="c-calc__input"                 
+              <input type="text" placeholder="0" className="c-calc__input" id="js-input"                 
                 onChange={this.handleInputChange}
                 onFocus={ (event) => this.handleInputFocus(event)}
                 onClick={ (event) => this.handleInputFocus(event)}
@@ -108,10 +295,10 @@ class App extends Component {
             </div>
             <div className="c-calc__action-box">
               <button type="button" className="btn btn--clear" onClick={this.handleClear}>ce</button>
-              <button type="button" className="btn btn--action btn--sm" onClick={ (event) => this.handleNumClick(event, 'MULTIPLY')}>&#x2716;</button>
-              <button type="button" className="btn btn--action" onClick={ (event) => this.handleNumClick(event, 'DIVIDE')}>&#247;</button>
-              <button type="button" className="btn btn--action" onClick={ (event) => this.handleNumClick(event, 'SUBSTRACT')}>&ndash;</button>
-              <button type="button" className="btn btn--action" onClick={ (event) => this.handleNumClick(event, 'ADD')}>+</button>
+              <button type="button" className="btn btn--action btn--sm" onClick={ (event) => this.handleMathAction(event, 'MULTIPLY')}>&#x2716;</button>
+              <button type="button" className="btn btn--action" onClick={ (event) => this.handleMathAction(event, 'DIVIDE')}>&#247;</button>
+              <button type="button" className="btn btn--action" onClick={ (event) => this.handleMathAction(event, 'SUBSTRACT')}>&ndash;</button>
+              <button type="button" className="btn btn--action" onClick={ (event) => this.handleMathAction(event, 'ADD')}>+</button>
               <button type="submit" className="btn btn--action" onClick={this.handleCalculate}>=</button>
               
               <div className="c-calc__num-box">
@@ -126,7 +313,7 @@ class App extends Component {
                 <button type="button" className="btn" onClick={ (event) => this.handleNumClick(event, 1) }>1</button>
                 <button type="button" className="btn btn--del" onClick={this.handleDelete}>del</button>
                 <button type="button" className="btn" onClick={ (event) => this.handleNumClick(event, 0) }>0</button>
-                <button type="button" className="btn" onClick={this.handleNumClick}>,</button>
+                <button type="button" className="btn" onClick={this.handleCommaClick}>,</button>
               </div>
             </div>
           </div>
