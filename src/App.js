@@ -17,56 +17,61 @@ class App extends Component {
 
     let valueStr = String(value);
     const inputBlock = document.getElementById('js-input');
+    let { inputValue, firstDigit, secondDigit, currentAction } = this.state;
 
-    if (!this.state.currentAction) { // action not set
-      if (!this.state.firstDigit) {         // firstDigit empty
-        this.setState({
-          firstDigit: valueStr,
-          inputValue: valueStr
-        })
+    if (!currentAction) { // action not set
+      if (!firstDigit) {         // firstDigit empty
+        if (valueStr !== '0') {
+          this.setState({
+            firstDigit: valueStr,
+            inputValue: valueStr
+          })
+        }
       } else {                              // firstDigit not empty
         this.setState({
-          firstDigit: this.state.firstDigit + valueStr,
-          inputValue: this.state.inputValue + valueStr
+          firstDigit: firstDigit + valueStr,
+          inputValue: inputValue + valueStr
         })
       }
     } else {                                // action is set
-      if (!this.state.firstDigit) {         // firstDigit empty
-        if (this.state.currentAction === 'ADD' || this.state.currentAction === 'MULTIPLY' || this.state.currentAction === 'DIVIDE') {
-          if (!this.state.secondDigit) {    // secondDigit empty
+      if (!firstDigit) {         // firstDigit empty
+        if (currentAction === 'ADD' || currentAction === 'MULTIPLY' || currentAction === 'DIVIDE') {
+          if (!secondDigit) {    // secondDigit empty
             this.setState({
               secondDigit: valueStr,
               inputValue: valueStr
             })
           } else {                          // secondDigit not empty
             this.setState({
-              secondDigit: this.state.secondDigit + valueStr,
-              inputValue: this.state.secondDigit + valueStr
+              secondDigit: secondDigit + valueStr,
+              inputValue: secondDigit + valueStr
             })
           }
-        } else if (this.state.currentAction === 'SUBSTRACT') {
-          if (!this.state.secondDigit) {    // secondDigit empty
+        } else if (currentAction === 'SUBSTRACT') {
+          if (!secondDigit) {    // secondDigit empty
             this.setState({
               secondDigit: valueStr,
               inputValue: '-' + valueStr
             })
           } else {                          // secondDigit not empty
             this.setState({
-              secondDigit: this.state.secondDigit + valueStr,
-              inputValue: this.state.inputValue + valueStr
+              secondDigit: secondDigit + valueStr,
+              inputValue: inputValue + valueStr
             })
           }
         }
       } else {                              // firstDigit not empty
-        if (!this.state.secondDigit) {      // secondDigit empty
-          this.setState({
-            secondDigit: valueStr,
-            inputValue: this.state.inputValue + valueStr
-          })
+        if (!secondDigit) {      // secondDigit empty
+          if (valueStr !== '0') {
+            this.setState({
+              secondDigit: valueStr,
+              inputValue: inputValue + valueStr
+            })
+          }
         } else {                            // secondDigit not empty
           this.setState({
-            secondDigit: this.state.secondDigit + valueStr,
-            inputValue: this.state.inputValue + valueStr
+            secondDigit: secondDigit + valueStr,
+            inputValue: inputValue + valueStr
           })
         }
       }
@@ -233,7 +238,7 @@ class App extends Component {
   handleKeyDown = (event) => {
     if ( 47 < event.keyCode && event.keyCode < 58 ) { // digits
       this.handleNumClick(event, String.fromCharCode(event.keyCode));
-    } else if (96 < event.keyCode && event.keyCode < 106) {
+    } else if (95 < event.keyCode && event.keyCode < 106) {
       this.handleNumClick(event, String.fromCharCode(event.keyCode - 48));
     } else if (event.keyCode === 107) { // add
       this.handleMathAction(event, 'ADD');
